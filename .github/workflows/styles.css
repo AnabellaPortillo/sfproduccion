@@ -1,0 +1,19 @@
+.flex-container {
+    display: flex;
+    flex-flow: row wrap;
+    background-color: darkblue;
+    padding: 10;
+    border: 2px solid black;
+}
+.flex-container div{
+    background-color: aqua;
+    width: 100px;
+    margin: 10px;
+    text-align: center;
+    line-height: 75px;
+    font-size-adjust: none;
+    border: 2px solid black;
+}
+body{
+    background-color: white
+}
