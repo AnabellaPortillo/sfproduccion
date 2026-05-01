@@ -7,12 +7,11 @@
     <h1><i class="bi bi-bar-chart-line me-2 text-primary"></i>Estadísticas</h1>
     <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Estadísticas</li></ol></nav>
   </div>
-  <!-- Period selector -->
   <form method="get" action="/statistics" class="d-flex gap-2 align-items-center">
     <select name="period" class="form-select form-select-sm" onchange="this.form.submit()" style="width:auto">
-      <option value="7" {% if period==7 %}selected{% endif %}>Últimos 7 días</option>
-      <option value="30" {% if period==30 %}selected{% endif %}>Últimos 30 días</option>
-      <option value="90" {% if period==90 %}selected{% endif %}>Últimos 90 días</option>
+      <option value="7"   {% if period==7   %}selected{% endif %}>Últimos 7 días</option>
+      <option value="30"  {% if period==30  %}selected{% endif %}>Últimos 30 días</option>
+      <option value="90"  {% if period==90  %}selected{% endif %}>Últimos 90 días</option>
       <option value="365" {% if period==365 %}selected{% endif %}>Último año</option>
     </select>
   </form>
@@ -20,53 +19,21 @@
 
 <!-- KPIs -->
 <div class="row g-3 mb-4">
-  <div class="col-6 col-xl-2">
-    <div class="card kpi-card kpi-blue">
-      <div class="kpi-value">{{ stats.total_orders }}</div>
-      <div class="kpi-label">Órdenes</div>
-    </div>
-  </div>
-  <div class="col-6 col-xl-2">
-    <div class="card kpi-card kpi-green">
-      <div class="kpi-value">{{ stats.total_results }}</div>
-      <div class="kpi-label">Resultados</div>
-    </div>
-  </div>
-  <div class="col-6 col-xl-2">
-    <div class="card kpi-card kpi-purple">
-      <div class="kpi-value">{{ stats.validated }}</div>
-      <div class="kpi-label">Validados</div>
-    </div>
-  </div>
-  <div class="col-6 col-xl-2">
-    <div class="card kpi-card kpi-orange">
-      <div class="kpi-value">{{ stats.abnormal }}</div>
-      <div class="kpi-label">Fuera de rango</div>
-    </div>
-  </div>
-  <div class="col-6 col-xl-2">
-    <div class="card kpi-card kpi-red">
-      <div class="kpi-value">{{ stats.new_patients }}</div>
-      <div class="kpi-label">Nuevos pacientes</div>
-    </div>
-  </div>
-  <div class="col-6 col-xl-2">
-    <div class="card kpi-card" style="background:linear-gradient(135deg,#0891b2,#06b6d4);color:#fff">
-      <div class="kpi-value">{{ stats.avg_tat }}h</div>
-      <div class="kpi-label">TAT promedio</div>
-    </div>
-  </div>
+  <div class="col-6 col-xl-2"><div class="card kpi-card kpi-blue"><div class="kpi-value">{{ stats.total_orders }}</div><div class="kpi-label">Órdenes</div></div></div>
+  <div class="col-6 col-xl-2"><div class="card kpi-card kpi-green"><div class="kpi-value">{{ stats.total_results }}</div><div class="kpi-label">Resultados</div></div></div>
+  <div class="col-6 col-xl-2"><div class="card kpi-card kpi-purple"><div class="kpi-value">{{ stats.validated }}</div><div class="kpi-label">Validados</div></div></div>
+  <div class="col-6 col-xl-2"><div class="card kpi-card kpi-orange"><div class="kpi-value">{{ stats.abnormal }}</div><div class="kpi-label">Fuera de rango</div></div></div>
+  <div class="col-6 col-xl-2"><div class="card kpi-card kpi-red"><div class="kpi-value">{{ stats.new_patients }}</div><div class="kpi-label">Nuevos pacientes</div></div></div>
+  <div class="col-6 col-xl-2"><div class="card kpi-card" style="background:linear-gradient(135deg,#0891b2,#06b6d4);color:#fff"><div class="kpi-value">{{ stats.avg_tat }}h</div><div class="kpi-label">TAT promedio</div></div></div>
 </div>
 
 <div class="row g-3 mb-3">
-  <!-- Orders trend -->
   <div class="col-lg-8">
     <div class="card h-100">
       <div class="card-header"><i class="bi bi-graph-up me-2 text-primary"></i>Tendencia de órdenes</div>
       <div class="card-body"><canvas id="trendChart" height="200"></canvas></div>
     </div>
   </div>
-  <!-- Urgency pie -->
   <div class="col-lg-4">
     <div class="card h-100">
       <div class="card-header"><i class="bi bi-pie-chart me-2 text-primary"></i>Por urgencia</div>
@@ -78,40 +45,105 @@
 </div>
 
 <div class="row g-3 mb-3">
-  <!-- By category -->
   <div class="col-lg-6">
     <div class="card h-100">
       <div class="card-header"><i class="bi bi-bar-chart me-2 text-primary"></i>Análisis por categoría</div>
       <div class="card-body"><canvas id="categoryBar" height="220"></canvas></div>
     </div>
   </div>
-  <!-- Abnormal rate by category -->
   <div class="col-lg-6">
     <div class="card h-100">
-      <div class="card-header"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Tasa de anormalidad (%)</div>
+      <div class="card-header"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Tasa de anormalidad por categoría (%)</div>
       <div class="card-body"><canvas id="abnormalChart" height="220"></canvas></div>
     </div>
   </div>
 </div>
 
-<!-- Top tests table -->
+<!-- ── Estadísticas por determinación ───────────────────────────────────── -->
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-flask me-2 text-primary"></i>Estadísticas por determinación</span>
+    <input type="text" id="detSearch" class="form-control form-control-sm w-auto" placeholder="Buscar análisis…" style="max-width:220px">
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0" id="detTable">
+        <thead>
+          <tr>
+            <th>Análisis</th>
+            <th>Categoría</th>
+            <th class="text-center">U.M.</th>
+            <th class="text-center">Referencia</th>
+            <th class="text-center">Cantidad</th>
+            <th class="text-center">Anormales</th>
+            <th class="text-center">% Anorm.</th>
+            <th class="text-center">Altos ↑</th>
+            <th class="text-center">Bajos ↓</th>
+            <th class="text-center">Promedio</th>
+            <th class="text-center">Mín / Máx</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in det_stats %}
+          <tr class="det-row" data-name="{{ d.name.lower() }} {{ d.code.lower() }}">
+            <td>
+              <span class="fw-semibold small">{{ d.name }}</span>
+              <span class="text-muted" style="font-size:0.7rem"> · {{ d.code }}</span>
+            </td>
+            <td><span class="badge" style="background:{{ d.color }};font-size:0.65rem">{{ d.category }}</span></td>
+            <td class="text-center text-muted small">{{ d.unit }}</td>
+            <td class="text-center text-muted small">{{ d.ref or '—' }}</td>
+            <td class="text-center fw-bold">{{ d.count }}</td>
+            <td class="text-center {% if d.abnormal > 0 %}text-danger fw-semibold{% else %}text-muted{% endif %}">{{ d.abnormal }}</td>
+            <td class="text-center">
+              {% if d.pct_abn > 0 %}
+              <span class="badge {% if d.pct_abn >= 30 %}bg-danger{% elif d.pct_abn >= 15 %}bg-warning text-dark{% else %}bg-light text-secondary border{% endif %}">
+                {{ d.pct_abn }}%
+              </span>
+              {% else %}—{% endif %}
+            </td>
+            <td class="text-center {% if d.highs > 0 %}flag-H{% else %}text-muted{% endif %}">{{ d.highs if d.highs > 0 else '—' }}</td>
+            <td class="text-center {% if d.lows > 0 %}flag-L{% else %}text-muted{% endif %}">{{ d.lows if d.lows > 0 else '—' }}</td>
+            <td class="text-center small">{{ d.avg if d.avg is not none else '—' }}</td>
+            <td class="text-center small text-muted">
+              {% if d.min is not none %}{{ d.min }} / {{ d.max }}{% else %}—{% endif %}
+            </td>
+            <td>
+              <a href="/statistics/determinacion/{{ d.id }}?period={{ period }}" class="btn btn-xs btn-outline-primary py-0 px-1" title="Ver detalle">
+                <i class="bi bi-graph-up"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="12" class="text-center text-muted py-4">Sin datos en el período</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="row g-3">
   <div class="col-lg-6">
     <div class="card">
-      <div class="card-header"><i class="bi bi-trophy me-2 text-primary"></i>Análisis más solicitados</div>
+      <div class="card-header"><i class="bi bi-trophy me-2 text-primary"></i>Top 10 análisis más solicitados</div>
       <div class="card-body p-0">
         <table class="table table-sm mb-0">
-          <thead><tr><th>#</th><th>Análisis</th><th>Categoría</th><th class="text-end">Cantidad</th></tr></thead>
+          <thead><tr><th>#</th><th>Análisis</th><th>Categoría</th><th class="text-end">N</th><th class="text-end">Anorm.</th></tr></thead>
           <tbody>
             {% for t in top_tests %}
             <tr>
               <td class="text-muted small">{{ loop.index }}</td>
-              <td class="small fw-semibold">{{ t.name }}</td>
+              <td class="small fw-semibold">
+                <a href="/statistics/determinacion/{{ loop.index }}?period={{ period }}" class="text-decoration-none">{{ t.name }}</a>
+              </td>
               <td><span class="badge" style="background:{{ t.color }};font-size:0.65rem">{{ t.category }}</span></td>
               <td class="text-end fw-bold">{{ t.count }}</td>
+              <td class="text-end {% if t.abnormal > 0 %}text-danger{% else %}text-muted{% endif %}">{{ t.abnormal }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="text-center text-muted py-3">Sin datos</td></tr>
+            <tr><td colspan="5" class="text-center text-muted py-3">Sin datos</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -123,18 +155,19 @@
       <div class="card-header"><i class="bi bi-flag me-2 text-danger"></i>Resultados anormales recientes</div>
       <div class="card-body p-0">
         <table class="table table-sm mb-0">
-          <thead><tr><th>Análisis</th><th>Paciente</th><th>Valor</th><th>Flag</th><th>Fecha</th></tr></thead>
+          <thead><tr><th>Protocolo</th><th>Análisis</th><th>Paciente</th><th>Valor</th><th>Flag</th><th>Fecha</th></tr></thead>
           <tbody>
             {% for r in recent_abnormal %}
             <tr>
+              <td><a href="/orders/{{ loop.index }}" class="fw-semibold text-decoration-none small">{{ r.protocol }}</a></td>
               <td class="small">{{ r.test_name }}</td>
               <td class="small">{{ r.patient }}</td>
-              <td class="fw-bold flag-{{ r.flag }}">{{ r.value }}</td>
+              <td class="fw-bold flag-{{ r.flag }}">{{ r.value }} <span class="small">{{ r.unit }}</span></td>
               <td><span class="flag-{{ r.flag }} fw-bold">{{ r.flag }}</span></td>
               <td class="text-muted small">{{ r.date }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="5" class="text-center text-muted py-3">Sin anormales</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-3">Sin anormales</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -146,70 +179,46 @@
 
 {% block scripts %}
 <script>
+// Filtro búsqueda en tabla de determinaciones
+document.getElementById('detSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.det-row').forEach(row => {
+    row.style.display = (!q || row.dataset.name.includes(q)) ? '' : 'none';
+  });
+});
+
 const trendData = {{ trend_data | tojson }};
 new Chart(document.getElementById('trendChart'), {
   type: 'line',
   data: {
     labels: trendData.labels,
-    datasets: [{
-      label: 'Órdenes',
-      data: trendData.orders,
-      borderColor: '#2563eb',
-      backgroundColor: 'rgba(37,99,235,0.08)',
-      tension: 0.3,
-      fill: true,
-    }, {
-      label: 'Resultados validados',
-      data: trendData.validated,
-      borderColor: '#10b981',
-      backgroundColor: 'rgba(16,185,129,0.08)',
-      tension: 0.3,
-      fill: true,
-    }]
+    datasets: [
+      { label: 'Órdenes', data: trendData.orders, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.3, fill: true },
+      { label: 'Validados', data: trendData.validated, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', tension: 0.3, fill: true }
+    ]
   },
-  options: {
-    responsive: true,
-    plugins: { legend: { position: 'top' } },
-    scales: { y: { beginAtZero: true } }
-  }
+  options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
 });
 
 const urgencyData = {{ urgency_data | tojson }};
 new Chart(document.getElementById('urgencyChart'), {
   type: 'doughnut',
-  data: {
-    labels: urgencyData.labels,
-    datasets: [{ data: urgencyData.values, backgroundColor: ['#94a3b8','#f59e0b','#ef4444'] }]
-  },
+  data: { labels: urgencyData.labels, datasets: [{ data: urgencyData.values, backgroundColor: ['#94a3b8','#f59e0b','#ef4444'] }] },
   options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
 });
 
 const catData = {{ category_bar_data | tojson }};
 new Chart(document.getElementById('categoryBar'), {
   type: 'bar',
-  data: {
-    labels: catData.labels,
-    datasets: [{ label: 'Análisis', data: catData.values, backgroundColor: catData.colors, borderRadius: 5 }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true } }
-  }
+  data: { labels: catData.labels, datasets: [{ label: 'Análisis', data: catData.values, backgroundColor: catData.colors, borderRadius: 5 }] },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
 });
 
 const abData = {{ abnormal_data | tojson }};
 new Chart(document.getElementById('abnormalChart'), {
   type: 'bar',
-  data: {
-    labels: abData.labels,
-    datasets: [{ label: '% anormal', data: abData.values, backgroundColor: 'rgba(239,68,68,0.7)', borderRadius: 5 }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, max: 100 } }
-  }
+  data: { labels: abData.labels, datasets: [{ label: '% anormal', data: abData.values, backgroundColor: 'rgba(239,68,68,0.7)', borderRadius: 5 }] },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
 });
 </script>
 {% endblock %}

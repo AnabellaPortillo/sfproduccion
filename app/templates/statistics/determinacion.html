@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ test.name }} — Estadísticas{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1>
+      <span class="badge me-2" style="background:{{ test.category.color }}">{{ test.category.name }}</span>
+      {{ test.name }}
+    </h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/statistics?period={{ period }}">Estadísticas</a></li>
+        <li class="breadcrumb-item active">{{ test.code }}</li>
+      </ol>
+    </nav>
+  </div>
+  <form method="get" class="d-flex gap-2 align-items-center">
+    <select name="period" class="form-select form-select-sm" onchange="this.form.submit()" style="width:auto">
+      <option value="7"   {% if period==7   %}selected{% endif %}>7 días</option>
+      <option value="30"  {% if period==30  %}selected{% endif %}>30 días</option>
+      <option value="90"  {% if period==90  %}selected{% endif %}>90 días</option>
+      <option value="365" {% if period==365 %}selected{% endif %}>1 año</option>
+    </select>
+  </form>
+</div>
+
+<!-- Info del análisis -->
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Definición</div>
+      <div class="card-body">
+        <dl class="row mb-0" style="font-size:0.875rem">
+          <dt class="col-5 text-muted fw-normal">Código</dt>
+          <dd class="col-7"><code>{{ test.code }}</code></dd>
+          <dt class="col-5 text-muted fw-normal">Método</dt>
+          <dd class="col-7">{{ test.method or '—' }}</dd>
+          <dt class="col-5 text-muted fw-normal">Unidad</dt>
+          <dd class="col-7">{{ test.unit or '—' }}</dd>
+          <dt class="col-5 text-muted fw-normal">Ref. M</dt>
+          <dd class="col-7 small">{{ test.ref_range_male or (test.ref_min|string + '–' + test.ref_max|string if test.ref_min is not none else '—') }}</dd>
+          <dt class="col-5 text-muted fw-normal">Ref. F</dt>
+          <dd class="col-7 small">{{ test.ref_range_female or '—' }}</dd>
+          <dt class="col-5 text-muted fw-normal">TAT</dt>
+          <dd class="col-7">{{ test.turnaround_hours }}h</dd>
+          <dt class="col-5 text-muted fw-normal">Ayuno</dt>
+          <dd class="col-7">{% if test.requires_fasting %}<span class="badge bg-warning-subtle text-warning-emphasis">Sí</span>{% else %}No{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="col-md-9">
+    <div class="row g-3">
+      <div class="col-6 col-md-2">
+        <div class="card kpi-card kpi-blue text-center py-3">
+          <div class="kpi-value">{{ summary.count }}</div>
+          <div class="kpi-label">Total</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card kpi-card kpi-orange text-center py-3">
+          <div class="kpi-value">{{ summary.abnormal }}</div>
+          <div class="kpi-label">Anormales</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card kpi-card kpi-red text-center py-3">
+          <div class="kpi-value">{{ summary.highs }}</div>
+          <div class="kpi-label">Altos ↑</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card kpi-card kpi-blue text-center py-3" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6)">
+          <div class="kpi-value">{{ summary.lows }}</div>
+          <div class="kpi-label">Bajos ↓</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card kpi-card kpi-green text-center py-3">
+          <div class="kpi-value">{{ summary.avg if summary.avg is not none else '—' }}</div>
+          <div class="kpi-label">Promedio</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card kpi-card kpi-purple text-center py-3">
+          <div class="kpi-value">
+            {% if summary.count > 0 %}{{ ((summary.abnormal / summary.count) * 100)|round(1) }}%{% else %}—{% endif %}
+          </div>
+          <div class="kpi-label">% Anormal</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header small"><i class="bi bi-graph-up me-1"></i>Tendencia 30 días</div>
+          <div class="card-body p-2"><canvas id="trendChart" height="110"></canvas></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header small"><i class="bi bi-bar-chart me-1"></i>Distribución de valores</div>
+          <div class="card-body p-2"><canvas id="histChart" height="110"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabla de resultados individuales -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-table me-2"></i>Últimos resultados</span>
+    <span class="badge bg-secondary">{{ summary.count }} total · mostrando {{ recent|length }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Protocolo</th>
+            <th>Paciente</th>
+            <th>Documento</th>
+            <th class="text-center">Resultado</th>
+            <th class="text-center">U.M.</th>
+            <th class="text-center">Flag</th>
+            <th class="text-center">Estado</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent %}
+          <tr>
+            <td><span class="fw-semibold small font-monospace">{{ r.protocol }}</span></td>
+            <td class="small">{{ r.patient }}</td>
+            <td class="text-muted small">{{ r.doc }}</td>
+            <td class="text-center fw-bold {% if r.flag %}flag-{{ r.flag }}{% endif %}">
+              {{ r.value }}
+            </td>
+            <td class="text-center text-muted small">{{ r.unit }}</td>
+            <td class="text-center">
+              {% if r.flag %}<span class="flag-{{ r.flag }} fw-bold">{{ r.flag }}</span>{% else %}—{% endif %}
+            </td>
+            <td class="text-center">
+              <span class="badge badge-status status-{{ r.status }}">{{ r.status }}</span>
+            </td>
+            <td class="text-muted small">{{ r.date }}</td>
+            <td>
+              <a href="/orders/{{ r.order_id }}" class="btn btn-xs btn-outline-secondary py-0 px-1">
+                <i class="bi bi-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-4">Sin resultados en el período</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const trendData = {{ trend_data | tojson }};
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: trendData.labels,
+    datasets: [
+      { label: 'Total', data: trendData.counts, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.07)', tension: 0.3, fill: true },
+      { label: 'Anormales', data: trendData.abnormal, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.07)', tension: 0.3, fill: true }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  }
+});
+
+const histData = {{ hist_data | tojson }};
+if (histData.labels.length > 0) {
+  new Chart(document.getElementById('histChart'), {
+    type: 'bar',
+    data: {
+      labels: histData.labels,
+      datasets: [{ data: histData.values, backgroundColor: histData.colors, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

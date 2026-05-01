@@ -20,8 +20,9 @@ def _require_session(request: Request):
 
 
 def _next_order_number(db: Session) -> str:
+    """Formato: ddmmaaXXX — ej. 010526005 para el 5to protocolo del 01/05/2026."""
     today = datetime.now()
-    prefix = today.strftime("%Y%m%d")
+    prefix = today.strftime("%d%m%y")          # ddmmaa
     last = (
         db.query(Order)
         .filter(Order.order_number.like(f"{prefix}%"))
@@ -29,10 +30,10 @@ def _next_order_number(db: Session) -> str:
         .first()
     )
     if last:
-        seq = int(last.order_number[-4:]) + 1
+        seq = int(last.order_number[6:]) + 1   # últimos 3 dígitos
     else:
         seq = 1
-    return f"{prefix}{seq:04d}"
+    return f"{prefix}{seq:03d}"
 
 
 @router.get("", response_class=HTMLResponse)
