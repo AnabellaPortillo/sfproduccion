@@ -82,18 +82,16 @@
 
   <!-- Main content -->
   <main id="main-content" class="flex-grow-1">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-container">
-          {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+    {% if request.state.flash_messages %}
+    <div class="flash-container">
+      {% for m in request.state.flash_messages %}
+      <div class="alert alert-{{ m.cat }} alert-dismissible fade show" role="alert">
+        {{ m.msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
     {% block content %}{% endblock %}
   </main>
