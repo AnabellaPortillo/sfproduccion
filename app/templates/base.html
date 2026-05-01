@@ -68,6 +68,9 @@
     <a href="/statistics" class="sidebar-link {% if active_page == 'statistics' %}active{% endif %}">
       <i class="bi bi-bar-chart-line"></i><span>Estadísticas</span>
     </a>
+    <a href="/import" class="sidebar-link {% if active_page == 'import' %}active{% endif %}">
+      <i class="bi bi-file-earmark-excel"></i><span>Importar Excel</span>
+    </a>
 
     {% if request.session.get("role") in ["ADMIN", "SUPERVISOR"] %}
     <div class="sidebar-section-label mt-2">Administración</div>

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Vista previa — Importar Excel{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-eye me-2 text-primary"></i>Vista previa de importación</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/import">Importar</a></li>
+        <li class="breadcrumb-item active">Vista previa</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<!-- Resumen -->
+<div class="alert alert-info d-flex align-items-center gap-3 mb-3">
+  <i class="bi bi-file-earmark-excel fs-3 text-success"></i>
+  <div>
+    <strong>{{ filename }}</strong> — Se encontraron
+    <span class="badge bg-primary">{{ total_protocols }} protocolos</span>
+    con
+    <span class="badge bg-secondary">{{ total_results }} resultados</span>
+    para importar.
+  </div>
+</div>
+
+<!-- Protocolos -->
+{% for p in preview %}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-clipboard2-pulse text-primary"></i>
+      <span class="fw-bold">Hoja: {{ p.sheet }}</span>
+      {% if p.protocol_number %}
+      <span class="badge bg-primary-subtle text-primary-emphasis">N° {{ p.protocol_number }}</span>
+      {% endif %}
+      <span class="text-muted small">{{ p.order_date }}</span>
+      <span class="badge badge-status urgency-{{ p.urgency }}">{{ p.urgency }}</span>
+    </div>
+    {% if p.unmatched > 0 %}
+    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>{{ p.unmatched }} sin coincidencia en catálogo</span>
+    {% else %}
+    <span class="badge bg-success"><i class="bi bi-check2 me-1"></i>Todos los análisis encontrados</span>
+    {% endif %}
+  </div>
+  <div class="card-body py-2">
+    <!-- Datos del paciente -->
+    <div class="row g-2 mb-3 align-items-center">
+      <div class="col-auto">
+        <span class="badge bg-light text-secondary border">
+          {% if p.existing_patient %}<i class="bi bi-person-check text-success"></i> Paciente existente{% else %}<i class="bi bi-person-plus text-primary"></i> Nuevo paciente{% endif %}
+        </span>
+      </div>
+      <div class="col">
+        <span class="fw-semibold">{{ p.patient_name }}</span>
+        <span class="text-muted ms-2 small">DNI {{ p.document }}</span>
+        <span class="text-muted ms-2 small">Nac. {{ p.birth_date }}</span>
+        <span class="text-muted ms-2 small">{{ {'M':'Masc.','F':'Fem.','O':'Otro'}.get(p.gender, p.gender) }}</span>
+        {% if p.doctor %}<span class="text-muted ms-2 small"><i class="bi bi-person-badge me-1"></i>{{ p.doctor }}</span>{% endif %}
+        {% if p.health_insurance %}<span class="text-muted ms-2 small"><i class="bi bi-shield-plus me-1"></i>{{ p.health_insurance }}</span>{% endif %}
+      </div>
+      {% if p.existing_patient %}
+      <div class="col-auto">
+        <a href="/patients/{{ p.existing_patient }}" class="btn btn-xs btn-outline-secondary py-0" target="_blank">Ver historial</a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if p.warnings %}
+    {% for w in p.warnings %}
+    <div class="alert alert-warning py-1 small mb-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ w }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Resultados -->
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Análisis (Excel)</th>
+            <th>Coincidencia en catálogo</th>
+            <th class="text-center">Resultado</th>
+            <th class="text-center">Unidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in p.results %}
+          <tr>
+            <td class="small">{{ r.name }}</td>
+            <td>
+              {% if r.found %}
+              <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>{{ r.matched }}</span>
+              {% else %}
+              <span class="text-warning small"><i class="bi bi-exclamation-circle me-1"></i>No encontrado — se creará como nuevo</span>
+              {% endif %}
+            </td>
+            <td class="text-center fw-bold small">{{ r.value or '—' }}</td>
+            <td class="text-center text-muted small">{{ r.unit or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Acciones -->
+<div class="d-flex gap-3 mt-3 sticky-bottom bg-white border-top py-3">
+  <form method="post" action="/import/confirm">
+    <button type="submit" class="btn btn-success btn-lg">
+      <i class="bi bi-check-lg me-2"></i>Confirmar e importar {{ total_protocols }} protocolos
+    </button>
+  </form>
+  <a href="/import" class="btn btn-outline-secondary btn-lg">
+    <i class="bi bi-x me-1"></i>Cancelar
+  </a>
+</div>
+{% endblock %}

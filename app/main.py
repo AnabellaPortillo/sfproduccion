@@ -6,7 +6,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .database import engine, Base
-from .routers import auth, dashboard, patients, orders, results, equipment, catalog, statistics, admin
+from .routers import auth, dashboard, patients, orders, results, equipment, catalog, statistics, admin, imports
 
 Base.metadata.create_all(bind=engine)
 
@@ -39,3 +39,4 @@ app.include_router(equipment.router)
 app.include_router(catalog.router)
 app.include_router(statistics.router)
 app.include_router(admin.router)
+app.include_router(imports.router)

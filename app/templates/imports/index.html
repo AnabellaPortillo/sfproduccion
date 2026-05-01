@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Importar desde Excel{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-file-earmark-excel me-2 text-success"></i>Importar desde Excel</h1>
+  <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Importar</li></ol></nav>
+</div>
+
+{% if error %}
+<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>{{ error }}</div>
+{% endif %}
+
+<div class="row g-4">
+
+  <!-- Upload -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-upload me-2 text-primary"></i>Subir archivo Excel</div>
+      <div class="card-body">
+        <form method="post" action="/import/preview" enctype="multipart/form-data" id="uploadForm">
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Archivo .xlsx</label>
+            <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required
+                   id="fileInput" onchange="updateFileName(this)" />
+            <div class="form-text">Cada hoja del archivo representa un protocolo de análisis.</div>
+          </div>
+
+          <!-- Drop zone visual -->
+          <div id="dropZone" class="border border-2 border-dashed rounded-3 p-5 text-center mb-4"
+               style="border-color:#cbd5e1 !important;cursor:pointer;transition:all .2s"
+               onclick="document.getElementById('fileInput').click()"
+               ondragover="event.preventDefault();this.style.background='#eff6ff'"
+               ondragleave="this.style.background=''"
+               ondrop="handleDrop(event)">
+            <i class="bi bi-file-earmark-excel fs-2 text-success"></i>
+            <div class="mt-2 fw-semibold" id="dropText">Arrastrá el archivo acá o hacé clic para seleccionar</div>
+            <div class="text-muted small mt-1">Solo archivos .xlsx</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+            <i class="bi bi-eye me-2"></i>Vista previa de importación
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download template + instructions -->
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-download me-2 text-success"></i>Template de importación</div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">
+          Descargá el template con el formato correcto. Incluye 2 protocolos de ejemplo
+          y todos los análisis del catálogo en la hoja de instrucciones.
+        </p>
+        <a href="/import/template" class="btn btn-success w-100">
+          <i class="bi bi-file-earmark-excel me-2"></i>Descargar template .xlsx
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Estructura del archivo</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:0.8rem">
+          <thead><tr><th>Fila</th><th>Contenido</th></tr></thead>
+          <tbody>
+            <tr><td class="fw-semibold text-nowrap">Fila 2</td><td>Protocolo · Fecha · Urgencia</td></tr>
+            <tr><td class="fw-semibold text-nowrap">Fila 3</td><td>Apellido · Nombre</td></tr>
+            <tr><td class="fw-semibold text-nowrap">Fila 4</td><td>DNI · Fecha Nac. · Género</td></tr>
+            <tr><td class="fw-semibold text-nowrap">Fila 5</td><td>Médico · Obra Social · N° Afiliado</td></tr>
+            <tr><td class="fw-semibold text-nowrap">Fila 6</td><td>Observaciones</td></tr>
+            <tr><td class="fw-semibold text-nowrap">Fila 7</td><td><code>Análisis | Resultado | Unidad | Referencia</code></td></tr>
+            <tr><td class="fw-semibold text-nowrap">Fila 8+</td><td>Un resultado por fila</td></tr>
+          </tbody>
+        </table>
+        <div class="px-3 py-2 bg-light border-top small text-muted">
+          <i class="bi bi-lightbulb me-1 text-warning"></i>
+          Si el DNI ya existe, el paciente <strong>no se duplica</strong>.<br>
+          Los protocolos con mismo número se <strong>omiten</strong> (no duplica).
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateFileName(input) {
+  if (input.files.length > 0) {
+    document.getElementById('dropText').textContent = input.files[0].name;
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('dropZone').style.background = '#f0fdf4';
+  }
+}
+function handleDrop(e) {
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  document.getElementById('fileInput').files = dt.files;
+  updateFileName(document.getElementById('fileInput'));
+  document.getElementById('dropZone').style.background = '';
+}
+</script>
+{% endblock %}
