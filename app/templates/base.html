@@ -85,9 +85,9 @@
 
   <!-- Main content -->
   <main id="main-content" class="flex-grow-1">
-    {% if request.state.flash_messages %}
+    {% if flash_messages is defined and flash_messages %}
     <div class="flash-container">
-      {% for m in request.state.flash_messages %}
+      {% for m in flash_messages %}
       <div class="alert alert-{{ m.cat }} alert-dismissible fade show" role="alert">
         {{ m.msg }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
