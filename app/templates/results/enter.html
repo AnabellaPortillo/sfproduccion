@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Carga de Resultados — {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-pencil-square me-2 text-primary"></i>Carga de Resultados</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/orders">Órdenes</a></li>
+        <li class="breadcrumb-item"><a href="/orders/{{ order.id }}">{{ order.order_number }}</a></li>
+        <li class="breadcrumb-item active">Resultados</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<!-- Patient summary bar -->
+<div class="alert alert-light border d-flex align-items-center gap-3 py-2 mb-3">
+  <i class="bi bi-person-circle fs-4 text-primary"></i>
+  <div class="flex-grow-1">
+    <span class="fw-semibold">{{ order.patient.last_name }}, {{ order.patient.first_name }}</span>
+    <span class="text-muted ms-2 small">{{ order.patient.document_type }} {{ order.patient.document_number }}</span>
+    <span class="text-muted ms-2 small">{{ order.patient.birth_date.strftime('%d/%m/%Y') }}</span>
+  </div>
+  <div>
+    <span class="badge badge-status urgency-{{ order.urgency }}">{{ order.urgency }}</span>
+    <span class="badge badge-status status-{{ order.status }} ms-1">{{ order.status }}</span>
+  </div>
+</div>
+
+<form method="post" action="/results/enter/{{ order.id }}">
+
+  <!-- Equipment selector -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-cpu me-2"></i>Equipo analizador</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <select name="equipment_id" class="form-select form-select-sm">
+            <option value="">— Sin equipo —</option>
+            {% for eq in equipment %}
+            <option value="{{ eq.id }}">{{ eq.name }} ({{ eq.equipment_type }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="datetime-local" name="result_date" class="form-control form-control-sm" value="{{ now }}" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results per category -->
+  {% for category, items in grouped_items %}
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2">
+      <span class="badge" style="background:{{ category.color }}">{{ category.name }}</span>
+      <span class="small text-muted">{{ items | length }} análisis</span>
+    </div>
+    <div class="card-body">
+      {% for item in items %}
+      <div class="result-row {% if item.result and item.result.abnormal_flag %}abnormal-{{ item.result.abnormal_flag }}{% endif %} {% if item.result and item.result.status == 'VALIDATED' %}validated{% endif %}">
+        <div class="row align-items-center g-2">
+          <div class="col-md-3">
+            <div class="fw-semibold small">{{ item.test.name }}</div>
+            <div class="text-muted" style="font-size:0.7rem">{{ item.test.code }}</div>
+          </div>
+          <div class="col-md-2">
+            <input
+              type="text"
+              name="value_{{ item.id }}"
+              class="form-control form-control-sm text-center"
+              value="{{ item.result.value if item.result else '' }}"
+              placeholder="Resultado"
+              {% if item.result and item.result.status == 'VALIDATED' %}readonly{% endif %}
+              oninput="checkAbnormal(this, '{{ item.test.ref_min or '' }}', '{{ item.test.ref_max or '' }}')"
+            />
+          </div>
+          <div class="col-md-1 text-center">
+            <span class="text-muted small">{{ item.test.unit or '' }}</span>
+          </div>
+          <div class="col-md-3">
+            <span class="text-muted" style="font-size:0.75rem">
+              Ref:
+              {% if item.test.ref_min is not none and item.test.ref_max is not none %}
+                {{ item.test.ref_min }} – {{ item.test.ref_max }}
+              {% else %}
+                {{ item.test.ref_range_male or '—' }}
+              {% endif %}
+            </span>
+          </div>
+          <div class="col-md-1 text-center">
+            <span class="abnormal-badge {% if item.result and item.result.abnormal_flag %}flag-{{ item.result.abnormal_flag }}{% endif %}">
+              {{ item.result.abnormal_flag if item.result and item.result.abnormal_flag else '' }}
+            </span>
+          </div>
+          <div class="col-md-2 d-flex align-items-center gap-1">
+            {% if item.result %}
+              <span class="badge badge-status status-{{ item.result.status }} small">{{ item.result.status }}</span>
+              {% if item.result.status not in ['VALIDATED'] %}
+              <a href="/results/validate/{{ item.result.id }}" class="btn btn-xs btn-warning py-0 px-1 ms-auto" title="Validar">
+                <i class="bi bi-check2"></i>
+              </a>
+              {% endif %}
+            {% else %}
+              <span class="badge badge-status status-PENDING small">PENDING</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if item.result and item.result.observations %}
+        <div class="mt-1">
+          <input type="text" name="obs_{{ item.id }}" class="form-control form-control-sm" value="{{ item.result.observations }}" placeholder="Observaciones..." />
+        </div>
+        {% else %}
+        <div class="mt-1">
+          <input type="text" name="obs_{{ item.id }}" class="form-control form-control-sm" placeholder="Observaciones (opcional)..." />
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="d-flex gap-2 mt-3">
+    <button type="submit" name="action" value="save" class="btn btn-primary">
+      <i class="bi bi-floppy me-1"></i>Guardar resultados
+    </button>
+    <button type="submit" name="action" value="save_validate" class="btn btn-success">
+      <i class="bi bi-patch-check me-1"></i>Guardar y validar todo
+    </button>
+    <a href="/orders/{{ order.id }}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

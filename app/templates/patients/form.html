@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if patient else 'Nuevo' }} Paciente{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-person-plus me-2 text-primary"></i>{{ 'Editar' if patient else 'Nuevo' }} Paciente</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/patients">Pacientes</a></li>
+      <li class="breadcrumb-item active">{{ 'Editar' if patient else 'Nuevo' }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <form method="post" action="{{ '/patients/' + patient.id|string + '/edit' if patient else '/patients/new' }}">
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-person me-2"></i>Datos personales</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Tipo Doc.</label>
+              <select name="document_type" class="form-select form-select-sm">
+                {% for t in ['DNI','PASAPORTE','CUIT','LE','LC','CI'] %}
+                <option value="{{ t }}" {% if (patient and patient.document_type == t) or (not patient and t=='DNI') %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">N° Documento *</label>
+              <input type="text" name="document_number" class="form-control form-control-sm" required value="{{ patient.document_number if patient else '' }}" />
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold">Género *</label>
+              <select name="gender" class="form-select form-select-sm" required>
+                <option value="M" {% if patient and patient.gender.value == 'M' %}selected{% endif %}>Masculino</option>
+                <option value="F" {% if patient and patient.gender.value == 'F' %}selected{% endif %}>Femenino</option>
+                <option value="O" {% if patient and patient.gender.value == 'O' %}selected{% endif %}>Otro</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Apellido *</label>
+              <input type="text" name="last_name" class="form-control form-control-sm" required value="{{ patient.last_name if patient else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nombre *</label>
+              <input type="text" name="first_name" class="form-control form-control-sm" required value="{{ patient.first_name if patient else '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Fecha Nacimiento *</label>
+              <input type="date" name="birth_date" class="form-control form-control-sm" required value="{{ patient.birth_date.strftime('%Y-%m-%d') if patient else '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Teléfono</label>
+              <input type="text" name="phone" class="form-control form-control-sm" value="{{ patient.phone or '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Email</label>
+              <input type="email" name="email" class="form-control form-control-sm" value="{{ patient.email or '' }}" />
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold">Dirección</label>
+              <input type="text" name="address" class="form-control form-control-sm" value="{{ patient.address or '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Ciudad</label>
+              <input type="text" name="city" class="form-control form-control-sm" value="{{ patient.city or '' }}" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-shield-plus me-2"></i>Cobertura médica</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Obra Social / Prepaga</label>
+              <input type="text" name="health_insurance" class="form-control form-control-sm" value="{{ patient.health_insurance or '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">N° Afiliado</label>
+              <input type="text" name="insurance_number" class="form-control form-control-sm" value="{{ patient.insurance_number or '' }}" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-sticky me-2"></i>Observaciones</div>
+        <div class="card-body">
+          <textarea name="observations" class="form-control form-control-sm" rows="3">{{ patient.observations or '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+        <a href="/patients" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

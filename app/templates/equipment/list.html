@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Equipos{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-cpu me-2 text-primary"></i>Equipos Analizadores</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Equipos</li></ol></nav>
+  </div>
+  <a href="/equipment/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Equipo</a>
+</div>
+
+<div class="row g-3">
+  {% for eq in equipment %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h6 class="fw-bold mb-0">{{ eq.name }}</h6>
+            <div class="text-muted small">{{ eq.manufacturer or '' }} {{ eq.model or '' }}</div>
+          </div>
+          <span class="badge {% if eq.status == 'ACTIVE' %}bg-success{% elif eq.status == 'MAINTENANCE' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+            {{ eq.status }}
+          </span>
+        </div>
+        <dl class="row mb-0" style="font-size:0.8rem">
+          <dt class="col-5 text-muted fw-normal">Tipo</dt>
+          <dd class="col-7">{{ eq.equipment_type or '—' }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">N° Serie</dt>
+          <dd class="col-7">{{ eq.serial_number or '—' }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Ubicación</dt>
+          <dd class="col-7">{{ eq.location or '—' }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Ult. Calibr.</dt>
+          <dd class="col-7">{{ eq.last_calibration.strftime('%d/%m/%Y') if eq.last_calibration else '—' }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Próx. Calibr.</dt>
+          <dd class="col-7 {% if eq.next_calibration and eq.next_calibration.strftime('%Y-%m-%d') < today %}text-danger fw-semibold{% endif %}">
+            {{ eq.next_calibration.strftime('%d/%m/%Y') if eq.next_calibration else '—' }}
+          </dd>
+
+          <dt class="col-5 text-muted fw-normal">Resultados</dt>
+          <dd class="col-7"><span class="badge bg-light text-secondary border">{{ eq.results | length }}</span></dd>
+        </dl>
+      </div>
+      <div class="card-footer py-2 d-flex gap-2">
+        <a href="/equipment/{{ eq.id }}/edit" class="btn btn-sm btn-outline-secondary flex-grow-1">
+          <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card"><div class="card-body text-center text-muted py-5">Sin equipos registrados</div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

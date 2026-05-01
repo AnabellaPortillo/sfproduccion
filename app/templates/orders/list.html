@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Órdenes{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-clipboard2-pulse me-2 text-primary"></i>Órdenes</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Órdenes</li></ol></nav>
+  </div>
+  <a href="/orders/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva Orden</a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2 align-items-end" method="get" action="/orders">
+      <div class="col-md-3">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="N° orden o paciente..." value="{{ q or '' }}">
+      </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">Todos los estados</option>
+          {% for s in ['PENDING','IN_PROGRESS','COMPLETED','VALIDATED','DELIVERED','CANCELLED'] %}
+          <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="urgency" class="form-select form-select-sm">
+          <option value="">Toda urgencia</option>
+          <option value="ROUTINE" {% if urgency_filter=='ROUTINE' %}selected{% endif %}>Rutina</option>
+          <option value="URGENT" {% if urgency_filter=='URGENT' %}selected{% endif %}>Urgente</option>
+          <option value="STAT" {% if urgency_filter=='STAT' %}selected{% endif %}>STAT</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from or '' }}" />
+      </div>
+      <div class="col-md-2">
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to or '' }}" />
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+        <a href="/orders" class="btn btn-sm btn-outline-secondary ms-1">Limpiar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th>#Orden</th>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Fecha</th>
+            <th>Urgencia</th>
+            <th>Estado</th>
+            <th>Análisis</th>
+            <th>Completado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          {% set done = order.items | selectattr('status', 'in', ['VALIDATED','RESULTED']) | list | length %}
+          {% set total = order.items | length %}
+          <tr class="{% if order.urgency == 'STAT' %}table-danger{% elif order.urgency == 'URGENT' %}table-warning{% endif %}">
+            <td>
+              <a href="/orders/{{ order.id }}" class="fw-semibold text-decoration-none">{{ order.order_number }}</a>
+            </td>
+            <td>
+              <a href="/patients/{{ order.patient_id }}" class="text-decoration-none">
+                {{ order.patient.last_name }}, {{ order.patient.first_name }}
+              </a>
+              <div class="text-muted" style="font-size:0.7rem">{{ order.patient.document_number }}</div>
+            </td>
+            <td class="small text-muted">{{ 'Dr. ' + order.doctor.last_name if order.doctor else '—' }}</td>
+            <td class="text-muted small">{{ order.order_date.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td><span class="badge badge-status urgency-{{ order.urgency }}">{{ order.urgency }}</span></td>
+            <td><span class="badge badge-status status-{{ order.status }}">{{ order.status }}</span></td>
+            <td>
+              <div class="d-flex align-items-center gap-1">
+                <div class="progress flex-grow-1" style="height:6px;min-width:40px">
+                  <div class="progress-bar bg-success" style="width:{{ (done/total*100)|int if total else 0 }}%"></div>
+                </div>
+                <span class="text-muted" style="font-size:0.7rem">{{ done }}/{{ total }}</span>
+              </div>
+            </td>
+            <td>
+              {% if total > 0 %}
+              <span class="small text-muted">{{ ((done/total)*100)|int }}%</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="/orders/{{ order.id }}" class="btn btn-outline-secondary py-0" title="Ver"><i class="bi bi-eye"></i></a>
+                <a href="/results/enter/{{ order.id }}" class="btn btn-outline-primary py-0" title="Cargar resultados"><i class="bi bi-pencil-square"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-5">Sin órdenes</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if total_count > per_page %}
+  <div class="card-footer d-flex justify-content-between align-items-center py-2">
+    <small class="text-muted">{{ total_count }} órdenes</small>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if page > 1 %}<li class="page-item"><a class="page-link" href="?page={{ page-1 }}">«</a></li>{% endif %}
+        <li class="page-item active"><a class="page-link" href="#">{{ page }}</a></li>
+        {% if page * per_page < total_count %}<li class="page-item"><a class="page-link" href="?page={{ page+1 }}">»</a></li>{% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

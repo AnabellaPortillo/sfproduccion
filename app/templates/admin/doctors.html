@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Médicos{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-person-badge me-2 text-primary"></i>Médicos</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Médicos</li></ol></nav>
+  </div>
+  <a href="/admin/doctors/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Médico</a>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-sm table-hover mb-0">
+      <thead><tr><th>Apellido y Nombre</th><th>Especialidad</th><th>Matrícula</th><th>Teléfono</th><th></th></tr></thead>
+      <tbody>
+        {% for d in doctors %}
+        <tr>
+          <td class="fw-semibold">Dr. {{ d.last_name }}, {{ d.first_name }}</td>
+          <td class="text-muted small">{{ d.specialty or '—' }}</td>
+          <td class="text-muted small">{{ d.license_number or '—' }}</td>
+          <td class="text-muted small">{{ d.phone or '—' }}</td>
+          <td><a href="/admin/doctors/{{ d.id }}/edit" class="btn btn-xs btn-outline-secondary py-0 px-1"><i class="bi bi-pencil"></i></a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">Sin médicos</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

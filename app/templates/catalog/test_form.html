@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if test else 'Nuevo' }} Análisis{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-flask me-2 text-primary"></i>{{ 'Editar' if test else 'Nuevo' }} Análisis</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/catalog">Catálogo</a></li>
+      <li class="breadcrumb-item active">{{ 'Editar' if test else 'Nuevo' }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <form method="post" action="{{ '/catalog/tests/' + test.id|string + '/edit' if test else '/catalog/tests/new' }}">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Código *</label>
+              <input type="text" name="code" class="form-control form-control-sm text-uppercase" required value="{{ test.code if test else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nombre *</label>
+              <input type="text" name="name" class="form-control form-control-sm" required value="{{ test.name if test else '' }}" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Abreviatura</label>
+              <input type="text" name="abbreviation" class="form-control form-control-sm" value="{{ test.abbreviation or '' if test else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Categoría *</label>
+              <select name="category_id" class="form-select form-select-sm" required>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if test and test.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Método</label>
+              <input type="text" name="method" class="form-control form-control-sm" value="{{ test.method or '' if test else '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Unidad de medida</label>
+              <input type="text" name="unit" class="form-control form-control-sm" value="{{ test.unit or '' if test else '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Ref. Mín.</label>
+              <input type="number" step="0.001" name="ref_min" class="form-control form-control-sm" value="{{ test.ref_min if test and test.ref_min is not none else '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Ref. Máx.</label>
+              <input type="number" step="0.001" name="ref_max" class="form-control form-control-sm" value="{{ test.ref_max if test and test.ref_max is not none else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Rango ref. masculino (texto)</label>
+              <input type="text" name="ref_range_male" class="form-control form-control-sm" placeholder="Ej: 4.5-11.0 x10³/µL" value="{{ test.ref_range_male or '' if test else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Rango ref. femenino (texto)</label>
+              <input type="text" name="ref_range_female" class="form-control form-control-sm" value="{{ test.ref_range_female or '' if test else '' }}" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">TAT (horas)</label>
+              <input type="number" name="turnaround_hours" class="form-control form-control-sm" value="{{ test.turnaround_hours if test else 24 }}" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Precio</label>
+              <input type="number" step="0.01" name="price" class="form-control form-control-sm" value="{{ test.price if test else 0 }}" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check">
+                <input type="checkbox" name="requires_fasting" class="form-check-input" id="fasting" {% if test and test.requires_fasting %}checked{% endif %} />
+                <label class="form-check-label small" for="fasting">Requiere ayuno</label>
+              </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check">
+                <input type="checkbox" name="is_active" class="form-check-input" id="active" {% if not test or test.is_active %}checked{% endif %} />
+                <label class="form-check-label small" for="active">Activo</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Observaciones</label>
+              <textarea name="observations" class="form-control form-control-sm" rows="2">{{ test.observations or '' if test else '' }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+        <a href="/catalog" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

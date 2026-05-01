@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Pacientes{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-people me-2 text-primary"></i>Pacientes</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Pacientes</li></ol></nav>
+  </div>
+  <a href="/patients/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Paciente</a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="p-3 border-bottom">
+      <form class="row g-2" method="get" action="/patients">
+        <div class="col-md-4">
+          <input type="text" name="q" class="form-control form-control-sm" placeholder="Buscar por nombre, apellido o documento..." value="{{ search_q or '' }}">
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search me-1"></i>Buscar</button>
+          <a href="/patients" class="btn btn-sm btn-outline-secondary ms-1">Limpiar</a>
+        </div>
+      </form>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Documento</th>
+            <th>Apellido y Nombre</th>
+            <th>Nac.</th>
+            <th>Género</th>
+            <th>Teléfono</th>
+            <th>Obra Social</th>
+            <th>Órdenes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in patients %}
+          <tr>
+            <td><span class="badge bg-light text-secondary border me-1">{{ p.document_type }}</span>{{ p.document_number }}</td>
+            <td>
+              <a href="/patients/{{ p.id }}" class="fw-semibold text-decoration-none">
+                {{ p.last_name }}, {{ p.first_name }}
+              </a>
+            </td>
+            <td class="text-muted small">{{ p.birth_date.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if p.gender.value == 'M' %}<i class="bi bi-gender-male text-primary"></i>
+              {% elif p.gender.value == 'F' %}<i class="bi bi-gender-female text-danger"></i>
+              {% else %}<i class="bi bi-gender-ambiguous text-secondary"></i>{% endif %}
+            </td>
+            <td class="text-muted small">{{ p.phone or '—' }}</td>
+            <td class="small">{{ p.health_insurance or '—' }}</td>
+            <td><span class="badge bg-light text-secondary border">{{ p.orders | length }}</span></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="/patients/{{ p.id }}" class="btn btn-outline-secondary py-0" title="Ver"><i class="bi bi-eye"></i></a>
+                <a href="/patients/{{ p.id }}/edit" class="btn btn-outline-secondary py-0" title="Editar"><i class="bi bi-pencil"></i></a>
+                <a href="/orders/new?patient_id={{ p.id }}" class="btn btn-outline-primary py-0" title="Nueva orden"><i class="bi bi-plus"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-5">
+            {% if search_q %}No se encontraron pacientes para "{{ search_q }}"{% else %}Sin pacientes registrados{% endif %}
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if total > per_page %}
+  <div class="card-footer d-flex justify-content-between align-items-center py-2">
+    <small class="text-muted">Mostrando {{ patients|length }} de {{ total }}</small>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if page > 1 %}<li class="page-item"><a class="page-link" href="?page={{ page-1 }}&q={{ search_q or '' }}">«</a></li>{% endif %}
+        <li class="page-item active"><a class="page-link" href="#">{{ page }}</a></li>
+        {% if page * per_page < total %}<li class="page-item"><a class="page-link" href="?page={{ page+1 }}&q={{ search_q or '' }}">»</a></li>{% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

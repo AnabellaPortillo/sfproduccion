@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Orden {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-clipboard2-pulse me-2 text-primary"></i>Orden {{ order.order_number }}</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/orders">Órdenes</a></li>
+        <li class="breadcrumb-item active">{{ order.order_number }}</li>
+      </ol>
+    </nav>
+  </div>
+  <div class="d-flex gap-2 no-print">
+    <a href="/results/enter/{{ order.id }}" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>Cargar Resultados</a>
+    <button onclick="printReport()" class="btn btn-outline-secondary"><i class="bi bi-printer me-1"></i>Imprimir</button>
+    {% if order.status not in ['CANCELLED', 'DELIVERED'] %}
+    <form method="post" action="/orders/{{ order.id }}/status" class="d-inline">
+      <select name="new_status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+        <option value="">Cambiar estado…</option>
+        {% for s in ['PENDING','IN_PROGRESS','COMPLETED','VALIDATED','DELIVERED','CANCELLED'] %}
+        <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Summary -->
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Datos de la orden</div>
+      <div class="card-body">
+        <dl class="row mb-0" style="font-size:0.875rem">
+          <dt class="col-5 text-muted fw-normal">Estado</dt>
+          <dd class="col-7"><span class="badge badge-status status-{{ order.status }}">{{ order.status }}</span></dd>
+
+          <dt class="col-5 text-muted fw-normal">Urgencia</dt>
+          <dd class="col-7"><span class="badge badge-status urgency-{{ order.urgency }}">{{ order.urgency }}</span></dd>
+
+          <dt class="col-5 text-muted fw-normal">Fecha</dt>
+          <dd class="col-7">{{ order.order_date.strftime('%d/%m/%Y %H:%M') }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Médico</dt>
+          <dd class="col-7">{{ ('Dr. ' + order.doctor.last_name + ', ' + order.doctor.first_name) if order.doctor else '—' }}</dd>
+
+          {% if order.clinical_info %}
+          <dt class="col-5 text-muted fw-normal">Clínica</dt>
+          <dd class="col-7">{{ order.clinical_info }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-person me-2"></i>Paciente</div>
+      <div class="card-body">
+        <div class="fw-semibold">{{ order.patient.last_name }}, {{ order.patient.first_name }}</div>
+        <div class="text-muted small">{{ order.patient.document_type }} {{ order.patient.document_number }}</div>
+        <div class="text-muted small">{{ order.patient.birth_date.strftime('%d/%m/%Y') }}</div>
+        {% if order.patient.health_insurance %}
+        <div class="text-muted small mt-1"><i class="bi bi-shield-plus me-1"></i>{{ order.patient.health_insurance }}</div>
+        {% endif %}
+        <a href="/patients/{{ order.patient.id }}" class="btn btn-xs btn-outline-secondary mt-2 py-0 small">Ver historial</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results table -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-journal-medical me-2"></i>Resultados</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Análisis</th>
+              <th>Categoría</th>
+              <th>Resultado</th>
+              <th>U.M.</th>
+              <th>Referencia</th>
+              <th>Estado</th>
+              <th>Equipo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items %}
+            <tr>
+              <td>
+                <span class="fw-semibold small">{{ item.test.name }}</span>
+                <span class="text-muted" style="font-size:0.7rem"> {{ item.test.code }}</span>
+              </td>
+              <td><span class="badge" style="background:{{ item.test.category.color }};font-size:0.65rem">{{ item.test.category.name }}</span></td>
+              <td>
+                {% if item.result %}
+                  <span class="fw-bold {% if item.result.abnormal_flag %}flag-{{ item.result.abnormal_flag }}{% endif %}">
+                    {{ item.result.value }}
+                  </span>
+                  {% if item.result.abnormal_flag %}
+                  <span class="flag-{{ item.result.abnormal_flag }} ms-1">{{ item.result.abnormal_flag }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">{{ (item.result.unit if item.result) or item.test.unit or '—' }}</td>
+              <td class="text-muted small">
+                {% if item.test.ref_min is not none and item.test.ref_max is not none %}
+                  {{ item.test.ref_min }} – {{ item.test.ref_max }}
+                {% else %}
+                  {{ item.test.ref_range_male or '—' }}
+                {% endif %}
+              </td>
+              <td>
+                {% if item.result %}
+                  <span class="badge badge-status status-{{ item.result.status }}">{{ item.result.status }}</span>
+                {% else %}
+                  <span class="badge badge-status status-{{ item.status }}">{{ item.status }}</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">{{ item.result.equipment.name if item.result and item.result.equipment else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

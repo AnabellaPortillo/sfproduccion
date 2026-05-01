@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Nueva Orden{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-clipboard2-plus me-2 text-primary"></i>Nueva Orden</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/orders">Órdenes</a></li>
+      <li class="breadcrumb-item active">Nueva</li>
+    </ol>
+  </nav>
+</div>
+
+<form method="post" action="/orders/new" id="orderForm">
+<div class="row g-3">
+
+  <!-- Left: Patient + Doctor + Info -->
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-person me-2"></i>Paciente</div>
+      <div class="card-body">
+        <div class="mb-2">
+          <input type="text" id="patientSearch" class="form-control form-control-sm" placeholder="Buscar por nombre o documento..." />
+        </div>
+        <select name="patient_id" id="patientSelect" class="form-select form-select-sm" required size="4" style="height:auto">
+          {% if selected_patient %}
+          <option value="{{ selected_patient.id }}" selected>
+            {{ selected_patient.last_name }}, {{ selected_patient.first_name }} — {{ selected_patient.document_number }}
+          </option>
+          {% endif %}
+          {% for p in patients %}
+          {% if not selected_patient or p.id != selected_patient.id %}
+          <option value="{{ p.id }}">{{ p.last_name }}, {{ p.first_name }} — {{ p.document_number }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+        <a href="/patients/new" class="btn btn-xs btn-outline-secondary mt-2 py-0" target="_blank">
+          <i class="bi bi-plus me-1"></i>Nuevo paciente
+        </a>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-person-badge me-2"></i>Médico solicitante</div>
+      <div class="card-body">
+        <select name="doctor_id" class="form-select form-select-sm">
+          <option value="">— Sin médico —</option>
+          {% for d in doctors %}
+          <option value="{{ d.id }}">Dr. {{ d.last_name }}, {{ d.first_name }}{% if d.specialty %} ({{ d.specialty }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Datos de la orden</div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Urgencia</label>
+            <select name="urgency" class="form-select form-select-sm">
+              <option value="ROUTINE">Rutina</option>
+              <option value="URGENT">Urgente</option>
+              <option value="STAT">STAT</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Fecha/hora</label>
+            <input type="datetime-local" name="order_date" class="form-control form-control-sm" value="{{ now }}" />
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-semibold">Información clínica</label>
+            <textarea name="clinical_info" class="form-control form-control-sm" rows="2" placeholder="Diagnóstico presuntivo, indicación..."></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-semibold">Observaciones</label>
+            <textarea name="observations" class="form-control form-control-sm" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Test selection -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-flask me-2"></i>Análisis a realizar</span>
+        <span class="badge bg-primary" id="selectedCount">0 seleccionados</span>
+      </div>
+      <div class="card-body">
+        <input type="text" id="testSearch" class="form-control form-control-sm mb-3" placeholder="Buscar análisis..." />
+
+        {% for category in categories %}
+        <div class="mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge" style="background:{{ category.color }};">{{ category.name }}</span>
+          </div>
+          <div class="row g-1">
+            {% for test in category.tests if test.is_active %}
+            <div class="col-12 col-md-6 test-option" data-name="{{ test.name.lower() }} {{ test.code.lower() }}">
+              <label class="d-flex align-items-center gap-2 p-2 border rounded cursor-pointer test-label" style="cursor:pointer;transition:background .1s;">
+                <input type="checkbox" name="test_ids" value="{{ test.id }}" class="form-check-input test-check mt-0" />
+                <span>
+                  <span class="fw-semibold small">{{ test.name }}</span>
+                  <span class="text-muted" style="font-size:0.7rem"> · {{ test.code }}</span>
+                  {% if test.requires_fasting %}<span class="badge bg-warning-subtle text-warning-emphasis ms-1" style="font-size:0.65rem">Ayuno</span>{% endif %}
+                </span>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="mt-3 d-flex gap-2">
+  <button type="submit" class="btn btn-primary" id="submitBtn">
+    <i class="bi bi-check-lg me-1"></i>Crear Orden
+  </button>
+  <a href="/orders" class="btn btn-outline-secondary">Cancelar</a>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Patient search filter
+document.getElementById('patientSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  Array.from(document.getElementById('patientSelect').options).forEach(opt => {
+    opt.hidden = q && !opt.text.toLowerCase().includes(q);
+  });
+});
+
+// Test search filter
+document.getElementById('testSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.test-option').forEach(el => {
+    el.style.display = (!q || el.dataset.name.includes(q)) ? '' : 'none';
+  });
+});
+
+// Selected count + visual
+document.querySelectorAll('.test-check').forEach(cb => {
+  cb.addEventListener('change', updateCount);
+});
+
+function updateCount() {
+  const count = document.querySelectorAll('.test-check:checked').length;
+  document.getElementById('selectedCount').textContent = count + ' seleccionados';
+  document.querySelectorAll('.test-check').forEach(cb => {
+    const label = cb.closest('.test-label');
+    label.style.background = cb.checked ? '#eff6ff' : '';
+    label.style.borderColor = cb.checked ? '#93c5fd' : '';
+  });
+}
+</script>
+{% endblock %}

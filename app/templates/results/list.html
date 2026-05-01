@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Resultados{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-journal-medical me-2 text-primary"></i>Resultados</h1>
+  <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Resultados</li></ol></nav>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2 align-items-end" method="get" action="/results">
+      <div class="col-md-3">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="Paciente u orden..." value="{{ q or '' }}">
+      </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">Todos</option>
+          {% for s in ['DRAFT','PENDING_VALIDATION','VALIDATED','REJECTED'] %}
+          <option value="{{ s }}" {% if status_filter==s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from or '' }}">
+      </div>
+      <div class="col-md-2">
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to or '' }}">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+        <a href="/results" class="btn btn-sm btn-outline-secondary ms-1">Limpiar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Paciente</th>
+            <th>Análisis</th>
+            <th>Resultado</th>
+            <th>U.M.</th>
+            <th>Flag</th>
+            <th>Estado</th>
+            <th>Equipo</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          <tr>
+            <td><a href="/orders/{{ r.order_item.order_id }}" class="fw-semibold text-decoration-none">{{ r.order_item.order.order_number }}</a></td>
+            <td class="small">{{ r.order_item.order.patient.last_name }}, {{ r.order_item.order.patient.first_name }}</td>
+            <td class="small">{{ r.order_item.test.name }}</td>
+            <td>
+              <span class="fw-bold {% if r.abnormal_flag %}flag-{{ r.abnormal_flag }}{% endif %}">
+                {{ r.value or '—' }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ r.unit or '—' }}</td>
+            <td>
+              {% if r.abnormal_flag %}
+              <span class="flag-{{ r.abnormal_flag }} fw-bold">{{ r.abnormal_flag }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td><span class="badge badge-status status-{{ r.status }}">{{ r.status }}</span></td>
+            <td class="text-muted small">{{ r.equipment.name if r.equipment else '—' }}</td>
+            <td class="text-muted small">{{ r.result_date.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>
+              {% if r.status not in ['VALIDATED'] %}
+              <a href="/results/validate/{{ r.id }}" class="btn btn-xs btn-warning py-0 px-2">
+                <i class="bi bi-check2"></i> Validar
+              </a>
+              {% else %}
+              <span class="text-success small"><i class="bi bi-patch-check-fill"></i></span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" class="text-center text-muted py-5">Sin resultados</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

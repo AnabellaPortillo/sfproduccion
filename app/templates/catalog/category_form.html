@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if category else 'Nueva' }} Categoría{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-tag me-2 text-primary"></i>{{ 'Editar' if category else 'Nueva' }} Categoría</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/catalog">Catálogo</a></li>
+      <li class="breadcrumb-item active">{{ 'Editar' if category else 'Nueva' }} categoría</li>
+    </ol>
+  </nav>
+</div>
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <form method="post" action="{{ '/catalog/categories/' + category.id|string + '/edit' if category else '/catalog/categories/new' }}">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold">Nombre *</label>
+              <input type="text" name="name" class="form-control form-control-sm" required value="{{ category.name if category else '' }}" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Código *</label>
+              <input type="text" name="code" class="form-control form-control-sm text-uppercase" required value="{{ category.code if category else '' }}" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Descripción</label>
+              <textarea name="description" class="form-control form-control-sm" rows="2">{{ category.description or '' if category else '' }}</textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Color</label>
+              <input type="color" name="color" class="form-control form-control-sm form-control-color" value="{{ category.color if category else '#0d6efd' }}" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+        <a href="/catalog" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

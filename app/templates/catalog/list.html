@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Catálogo de Análisis{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-book me-2 text-primary"></i>Catálogo de An��lisis</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Catálogo</li></ol></nav>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/catalog/categories/new" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus me-1"></i>Categoría</a>
+    <a href="/catalog/tests/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Análisis</a>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2" method="get" action="/catalog">
+      <div class="col-md-4">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="Buscar por nombre o código..." value="{{ q or '' }}">
+      </div>
+      <div class="col-md-3">
+        <select name="category_id" class="form-select form-select-sm">
+          <option value="">Todas las categorías</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if cat_filter == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+        <a href="/catalog" class="btn btn-sm btn-outline-secondary ms-1">Limpiar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% for category in categories %}
+{% set cat_tests = tests | selectattr('category_id', 'equalto', category.id) | list %}
+{% if not cat_filter or cat_filter == category.id|string %}
+{% if cat_tests %}
+<div class="card mb-3">
+  <div class="card-header d-flex align-items-center gap-2">
+    <span class="badge" style="background:{{ category.color }}">{{ category.name }}</span>
+    <span class="text-muted small">{{ cat_tests | length }} análisis</span>
+    <div class="ms-auto">
+      <a href="/catalog/categories/{{ category.id }}/edit" class="btn btn-xs btn-outline-secondary py-0 px-1"><i class="bi bi-pencil"></i></a>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Código</th><th>Nombre</th><th>Método</th><th>U.M.</th>
+          <th>Ref. Masc.</th><th>Ref. Fem.</th><th>Ayuno</th><th>TAT</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for test in cat_tests %}
+        {% if not q or q.lower() in test.name.lower() or q.lower() in test.code.lower() %}
+        <tr>
+          <td><code class="small">{{ test.code }}</code></td>
+          <td class="fw-semibold small">{{ test.name }}</td>
+          <td class="text-muted small">{{ test.method or '—' }}</td>
+          <td class="text-muted small">{{ test.unit or '—' }}</td>
+          <td class="small">
+            {% if test.ref_min is not none and test.ref_max is not none %}
+              {{ test.ref_min }} – {{ test.ref_max }}
+            {% else %}
+              {{ test.ref_range_male or '—' }}
+            {% endif %}
+          </td>
+          <td class="small">{{ test.ref_range_female or '—' }}</td>
+          <td class="text-center">
+            {% if test.requires_fasting %}<i class="bi bi-check-circle-fill text-warning"></i>{% else %}—{% endif %}
+          </td>
+          <td class="text-muted small">{{ test.turnaround_hours }}h</td>
+          <td>
+            <a href="/catalog/tests/{{ test.id }}/edit" class="btn btn-xs btn-outline-secondary py-0 px-1"><i class="bi bi-pencil"></i></a>
+          </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endblock %}

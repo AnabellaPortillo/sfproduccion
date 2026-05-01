@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if doctor else 'Nuevo' }} Médico{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-person-badge me-2 text-primary"></i>{{ 'Editar' if doctor else 'Nuevo' }} Médico</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/admin/doctors">Médicos</a></li>
+      <li class="breadcrumb-item active">{{ 'Editar' if doctor else 'Nuevo' }}</li>
+    </ol>
+  </nav>
+</div>
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <form method="post" action="{{ '/admin/doctors/' + doctor.id|string + '/edit' if doctor else '/admin/doctors/new' }}">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Apellido *</label>
+              <input type="text" name="last_name" class="form-control form-control-sm" required value="{{ doctor.last_name if doctor else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nombre *</label>
+              <input type="text" name="first_name" class="form-control form-control-sm" required value="{{ doctor.first_name if doctor else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Especialidad</label>
+              <input type="text" name="specialty" class="form-control form-control-sm" value="{{ doctor.specialty or '' if doctor else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Matrícula</label>
+              <input type="text" name="license_number" class="form-control form-control-sm" value="{{ doctor.license_number or '' if doctor else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Teléfono</label>
+              <input type="text" name="phone" class="form-control form-control-sm" value="{{ doctor.phone or '' if doctor else '' }}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Email</label>
+              <input type="email" name="email" class="form-control form-control-sm" value="{{ doctor.email or '' if doctor else '' }}" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+        <a href="/admin/doctors" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

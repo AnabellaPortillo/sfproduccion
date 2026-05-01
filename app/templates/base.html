@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}LabCore{% endblock %} — LabCore LIS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" />
+  <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body>
+
+<!-- Top navbar -->
+<nav class="navbar navbar-dark navbar-top fixed-top">
+  <div class="container-fluid px-3">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <i class="bi bi-droplet-half fs-4 text-primary-emphasis"></i>
+      <span class="fw-bold">LabCore</span>
+      <span class="badge bg-primary-subtle text-primary-emphasis ms-1 small fw-normal">LIS</span>
+    </a>
+    <div class="d-flex align-items-center gap-3">
+      {% if request.session.get("user_id") %}
+      <span class="text-secondary small">
+        <i class="bi bi-person-circle me-1"></i>{{ request.session.get("username") }}
+        <span class="badge bg-secondary ms-1">{{ request.session.get("role") }}</span>
+      </span>
+      <a href="/auth/logout" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="d-flex" id="wrapper">
+
+  <!-- Sidebar -->
+  <nav id="sidebar" class="sidebar-nav d-flex flex-column">
+    <div class="sidebar-section-label">Principal</div>
+    <a href="/" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+    </a>
+
+    <div class="sidebar-section-label mt-2">Pacientes</div>
+    <a href="/patients" class="sidebar-link {% if active_page == 'patients' %}active{% endif %}">
+      <i class="bi bi-people"></i><span>Pacientes</span>
+    </a>
+    <a href="/orders/new" class="sidebar-link {% if active_page == 'new_order' %}active{% endif %}">
+      <i class="bi bi-plus-circle"></i><span>Nueva Orden</span>
+    </a>
+    <a href="/orders" class="sidebar-link {% if active_page == 'orders' %}active{% endif %}">
+      <i class="bi bi-clipboard2-pulse"></i><span>Órdenes</span>
+    </a>
+
+    <div class="sidebar-section-label mt-2">Laboratorio</div>
+    <a href="/results" class="sidebar-link {% if active_page == 'results' %}active{% endif %}">
+      <i class="bi bi-journal-medical"></i><span>Resultados</span>
+    </a>
+    <a href="/equipment" class="sidebar-link {% if active_page == 'equipment' %}active{% endif %}">
+      <i class="bi bi-cpu"></i><span>Equipos</span>
+    </a>
+    <a href="/catalog" class="sidebar-link {% if active_page == 'catalog' %}active{% endif %}">
+      <i class="bi bi-book"></i><span>Catálogo</span>
+    </a>
+
+    <div class="sidebar-section-label mt-2">Análisis</div>
+    <a href="/statistics" class="sidebar-link {% if active_page == 'statistics' %}active{% endif %}">
+      <i class="bi bi-bar-chart-line"></i><span>Estadísticas</span>
+    </a>
+
+    {% if request.session.get("role") in ["ADMIN", "SUPERVISOR"] %}
+    <div class="sidebar-section-label mt-2">Administración</div>
+    <a href="/admin/users" class="sidebar-link {% if active_page == 'users' %}active{% endif %}">
+      <i class="bi bi-people-fill"></i><span>Usuarios</span>
+    </a>
+    <a href="/admin/doctors" class="sidebar-link {% if active_page == 'doctors' %}active{% endif %}">
+      <i class="bi bi-person-badge"></i><span>Médicos</span>
+    </a>
+    {% endif %}
+  </nav>
+
+  <!-- Main content -->
+  <main id="main-content" class="flex-grow-1">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

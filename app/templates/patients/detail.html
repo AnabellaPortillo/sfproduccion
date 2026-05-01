@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.last_name }}, {{ patient.first_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1><i class="bi bi-person-circle me-2 text-primary"></i>{{ patient.last_name }}, {{ patient.first_name }}</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/patients">Pacientes</a></li>
+        <li class="breadcrumb-item active">Detalle</li>
+      </ol>
+    </nav>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/orders/new?patient_id={{ patient.id }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva Orden</a>
+    <a href="/patients/{{ patient.id }}/edit" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Editar</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <!-- Patient info card -->
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-person me-2"></i>Datos del paciente</div>
+      <div class="card-body">
+        <dl class="row mb-0" style="font-size:0.875rem">
+          <dt class="col-5 text-muted fw-normal">Documento</dt>
+          <dd class="col-7">{{ patient.document_type }} {{ patient.document_number }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Fecha Nac.</dt>
+          <dd class="col-7">{{ patient.birth_date.strftime('%d/%m/%Y') }}
+            <span class="text-muted">({{ age }} años)</span>
+          </dd>
+
+          <dt class="col-5 text-muted fw-normal">Género</dt>
+          <dd class="col-7">{{ {'M':'Masculino','F':'Femenino','O':'Otro'}[patient.gender.value] }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Teléfono</dt>
+          <dd class="col-7">{{ patient.phone or '—' }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Email</dt>
+          <dd class="col-7" style="word-break:break-all">{{ patient.email or '—' }}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Dirección</dt>
+          <dd class="col-7">{{ patient.address or '—' }}{% if patient.city %}, {{ patient.city }}{% endif %}</dd>
+
+          <dt class="col-5 text-muted fw-normal">Obra Social</dt>
+          <dd class="col-7">{{ patient.health_insurance or '—' }}</dd>
+
+          {% if patient.insurance_number %}
+          <dt class="col-5 text-muted fw-normal">N° Afiliado</dt>
+          <dd class="col-7">{{ patient.insurance_number }}</dd>
+          {% endif %}
+        </dl>
+        {% if patient.observations %}
+        <div class="mt-2 p-2 bg-light rounded small text-muted">
+          <i class="bi bi-sticky me-1"></i>{{ patient.observations }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clipboard2-pulse me-2"></i>Historial de órdenes</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis">{{ patient.orders | length }}</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr><th>#Orden</th><th>Fecha</th><th>Médico</th><th>Urgencia</th><th>Estado</th><th>Análisis</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for order in patient.orders | sort(attribute='order_date', reverse=True) %}
+              <tr>
+                <td><a href="/orders/{{ order.id }}" class="fw-semibold text-decoration-none">{{ order.order_number }}</a></td>
+                <td class="text-muted small">{{ order.order_date.strftime('%d/%m/%Y') }}</td>
+                <td class="small">{{ (order.doctor.last_name + ', ' + order.doctor.first_name) if order.doctor else '—' }}</td>
+                <td><span class="badge badge-status urgency-{{ order.urgency }}">{{ order.urgency }}</span></td>
+                <td><span class="badge badge-status status-{{ order.status }}">{{ order.status }}</span></td>
+                <td><span class="badge bg-light text-secondary border">{{ order.items | length }}</span></td>
+                <td><a href="/orders/{{ order.id }}" class="btn btn-xs btn-outline-secondary py-0 px-1"><i class="bi bi-eye"></i></a></td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="text-center text-muted py-4">Sin órdenes</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
