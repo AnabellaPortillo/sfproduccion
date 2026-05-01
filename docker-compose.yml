@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  labcore:
+    build: .
+    container_name: labcore-lis
+    ports:
+      - "8000:8000"          # acceder desde http://IP-DEL-SERVIDOR:8000
+    volumes:
+      - labcore_db:/app      # la base de datos persiste aunque se reinicie
+    restart: unless-stopped  # se reinicia automáticamente si se apaga el servidor
+
+volumes:
+  labcore_db:
