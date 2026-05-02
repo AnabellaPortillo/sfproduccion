@@ -194,6 +194,35 @@ async def save_results(
     return RedirectResponse(f"/orders/{order_id}", status_code=303)
 
 
+@router.get("/print/{order_id}", response_class=HTMLResponse)
+def print_report(order_id: int, request: Request, db: Session = Depends(get_db)):
+    _require_session(request)
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(404)
+
+    items_with_cat = sorted(order.items, key=lambda i: i.test.category_id)
+    grouped = []
+    for cat_id, grp in groupby(items_with_cat, key=lambda i: i.test.category_id):
+        cat = db.query(TestCategory).filter(TestCategory.id == cat_id).first()
+        grouped.append((cat, list(grp)))
+
+    from datetime import date
+    today = date.today()
+    p = order.patient
+    age = today.year - p.birth_date.year - (
+        (today.month, today.day) < (p.birth_date.month, p.birth_date.day)
+    )
+
+    return templates.TemplateResponse("results/print.html", {
+        "request": request,
+        "order": order,
+        "grouped_items": grouped,
+        "age": age,
+        "printed_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+    })
+
+
 @router.get("/validate/{result_id}", response_class=HTMLResponse)
 def validate_result(result_id: int, request: Request, db: Session = Depends(get_db)):
     _require_session(request)

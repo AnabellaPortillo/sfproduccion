@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informe — Protocolo {{ order.order_number }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 20px;
+    }
+
+    /* ── Header ── */
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 3px solid #1e3a5f;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .lab-name {
+      font-size: 20pt;
+      font-weight: bold;
+      color: #1e3a5f;
+      letter-spacing: 1px;
+    }
+    .lab-subtitle {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 2px;
+    }
+    .report-meta {
+      text-align: right;
+      font-size: 9pt;
+      color: #444;
+      line-height: 1.6;
+    }
+    .report-meta strong {
+      font-size: 11pt;
+      color: #1e3a5f;
+    }
+
+    /* ── Info boxes ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .info-box {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 8px 12px;
+    }
+    .info-box-title {
+      font-size: 8pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #1e3a5f;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 3px;
+    }
+    .info-row {
+      display: flex;
+      gap: 4px;
+      font-size: 10pt;
+      line-height: 1.7;
+    }
+    .info-label { color: #666; min-width: 100px; }
+    .info-value { font-weight: 500; }
+
+    /* ── Results table ── */
+    .category-title {
+      background: #1e3a5f;
+      color: #fff;
+      font-size: 9pt;
+      font-weight: bold;
+      padding: 4px 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 10px;
+      border-radius: 3px 3px 0 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+      margin-bottom: 2px;
+    }
+    thead th {
+      background: #f0f4f8;
+      padding: 5px 8px;
+      text-align: left;
+      font-size: 8.5pt;
+      font-weight: bold;
+      color: #333;
+      border-bottom: 1px solid #ccc;
+    }
+    tbody td {
+      padding: 5px 8px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: 1px solid #ccc; }
+
+    .val-normal { font-weight: 600; }
+    .val-high   { font-weight: 700; color: #c0392b; }
+    .val-low    { font-weight: 700; color: #2471a3; }
+    .flag-badge {
+      display: inline-block;
+      font-size: 8pt;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+    .flag-H { background: #fde8e8; color: #c0392b; }
+    .flag-L { background: #e8f0fe; color: #2471a3; }
+    .no-result { color: #aaa; font-style: italic; }
+
+    /* ── Footer ── */
+    .report-footer {
+      margin-top: 24px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9pt;
+      color: #666;
+    }
+    .signature-box {
+      text-align: center;
+      width: 200px;
+    }
+    .signature-line {
+      border-top: 1px solid #333;
+      margin-top: 40px;
+      padding-top: 4px;
+      font-size: 9pt;
+    }
+
+    .abnormal-legend {
+      font-size: 8.5pt;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    /* ── Print buttons (hidden when printing) ── */
+    .no-print {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 10pt;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: #1e3a5f; color: #fff; }
+    .btn-secondary { background: #e0e0e0; color: #333; }
+    .btn-success { background: #1a7f5a; color: #fff; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Action buttons (hidden on print) -->
+<div class="no-print">
+  <button class="btn btn-primary" onclick="window.print()">&#128438; Imprimir / Guardar PDF</button>
+  <a class="btn btn-success" href="#" id="btn-email">&#9993; Enviar por email</a>
+  <a class="btn btn-secondary" href="/orders/{{ order.id }}">&#8592; Volver a la orden</a>
+</div>
+
+<!-- Report header -->
+<div class="report-header">
+  <div>
+    <div class="lab-name">LabCore LIS</div>
+    <div class="lab-subtitle">Sistema de Información de Laboratorio</div>
+  </div>
+  <div class="report-meta">
+    <strong>Protocolo N° {{ order.order_number }}</strong><br>
+    Fecha de orden: {{ order.order_date.strftime('%d/%m/%Y') }}<br>
+    Fecha de emisión: {{ printed_at }}<br>
+    Estado:
+    {% if order.status == 'VALIDATED' %}
+      <strong style="color:#1a7f5a">&#10003; VALIDADO</strong>
+    {% else %}
+      {{ order.status }}
+    {% endif %}
+  </div>
+</div>
+
+<!-- Patient + order info -->
+<div class="info-grid">
+  <div class="info-box">
+    <div class="info-box-title">Datos del Paciente</div>
+    <div class="info-row"><span class="info-label">Apellido y nombre:</span><span class="info-value">{{ order.patient.last_name }}, {{ order.patient.first_name }}</span></div>
+    <div class="info-row"><span class="info-label">{{ order.patient.document_type }}:</span><span class="info-value">{{ order.patient.document_number }}</span></div>
+    <div class="info-row"><span class="info-label">Fecha de nac.:</span><span class="info-value">{{ order.patient.birth_date.strftime('%d/%m/%Y') }} ({{ age }} años)</span></div>
+    <div class="info-row"><span class="info-label">Sexo:</span><span class="info-value">{{ 'Masculino' if order.patient.gender == 'M' else ('Femenino' if order.patient.gender == 'F' else 'Otro') }}</span></div>
+    {% if order.patient.health_insurance %}
+    <div class="info-row"><span class="info-label">Obra social:</span><span class="info-value">{{ order.patient.health_insurance }}</span></div>
+    {% endif %}
+  </div>
+  <div class="info-box">
+    <div class="info-box-title">Datos de la Orden</div>
+    <div class="info-row"><span class="info-label">Médico:</span><span class="info-value">{{ ('Dr/a. ' + order.doctor.last_name + ', ' + order.doctor.first_name) if order.doctor else '—' }}</span></div>
+    {% if order.doctor and order.doctor.license_number %}
+    <div class="info-row"><span class="info-label">Matrícula:</span><span class="info-value">{{ order.doctor.license_number }}</span></div>
+    {% endif %}
+    <div class="info-row"><span class="info-label">Urgencia:</span><span class="info-value">{{ order.urgency }}</span></div>
+    {% if order.clinical_info %}
+    <div class="info-row"><span class="info-label">Inf. clínica:</span><span class="info-value">{{ order.clinical_info }}</span></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Results grouped by category -->
+{% for cat, items in grouped_items %}
+<div class="category-title">{{ cat.name }}</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:35%">Determinación</th>
+      <th style="width:15%">Resultado</th>
+      <th style="width:10%">U.M.</th>
+      <th style="width:20%">Valores de referencia</th>
+      <th style="width:12%">Equipo</th>
+      <th style="width:8%">Fecha</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.test.name }}</td>
+      <td>
+        {% if item.result %}
+          {% if item.result.abnormal_flag == 'H' %}
+            <span class="val-high">{{ item.result.value }}</span>
+            <span class="flag-badge flag-H">H</span>
+          {% elif item.result.abnormal_flag == 'L' %}
+            <span class="val-low">{{ item.result.value }}</span>
+            <span class="flag-badge flag-L">L</span>
+          {% else %}
+            <span class="val-normal">{{ item.result.value }}</span>
+          {% endif %}
+        {% else %}
+          <span class="no-result">Pendiente</span>
+        {% endif %}
+      </td>
+      <td>{{ (item.result.unit if item.result) or item.test.unit or '' }}</td>
+      <td>
+        {% if item.test.ref_min is not none and item.test.ref_max is not none %}
+          {{ item.test.ref_min }} – {{ item.test.ref_max }}
+        {% elif item.test.ref_range_male %}
+          {{ item.test.ref_range_male }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td style="font-size:9pt; color:#555">{{ item.result.equipment.name if item.result and item.result.equipment else '—' }}</td>
+      <td style="font-size:9pt; color:#555">{{ item.result.result_date.strftime('%d/%m/%y') if item.result else '' }}</td>
+    </tr>
+    {% if item.result and item.result.observations %}
+    <tr>
+      <td colspan="6" style="font-size:9pt; color:#555; padding-left:20px; font-style:italic">
+        Obs: {{ item.result.observations }}
+      </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endfor %}
+
+<div class="abnormal-legend">
+  <strong>H</strong> = Valor elevado &nbsp;&nbsp; <strong>L</strong> = Valor bajo
+</div>
+
+<!-- Footer / signature -->
+<div class="report-footer">
+  <div style="font-size:9pt; color:#888; align-self:flex-end">
+    Documento generado por LabCore LIS el {{ printed_at }}
+  </div>
+  <div class="signature-box">
+    <div class="signature-line">Firma y sello del profesional responsable</div>
+  </div>
+</div>
+
+<script>
+  // Build mailto link dynamically to include protocol number in subject
+  const protocol = "{{ order.order_number }}";
+  const patient = "{{ order.patient.last_name }}, {{ order.patient.first_name }}";
+  const subject = encodeURIComponent("Resultados de laboratorio — Protocolo " + protocol + " — " + patient);
+  const body = encodeURIComponent(
+    "Estimado/a Dr/a. {{ (order.doctor.last_name ~ ', ' ~ order.doctor.first_name) if order.doctor else '' }},\n\n" +
+    "Se adjuntan los resultados de laboratorio del protocolo " + protocol + " correspondiente al paciente " + patient + ".\n\n" +
+    "Fecha de emisión: {{ printed_at }}\n\n" +
+    "Puede imprimir este informe o guardarlo como PDF usando el botón 'Imprimir / Guardar PDF'.\n\n" +
+    "LabCore LIS"
+  );
+  document.getElementById("btn-email").href = "mailto:?subject=" + subject + "&body=" + body;
+</script>
+</body>
+</html>
