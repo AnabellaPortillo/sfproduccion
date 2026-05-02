@@ -118,12 +118,26 @@ async def create_order(
     db.flush()
 
     total = 0.0
+    added_test_ids: set = set()
+
     for tid in test_ids:
         test = db.query(Test).filter(Test.id == int(tid)).first()
-        if test:
-            item = OrderItem(order_id=order.id, test_id=test.id)
-            db.add(item)
+        if not test:
+            continue
+        if test.is_panel and test.panel_components:
+            # Expand panel into individual component tests
             total += test.price or 0.0
+            for code in test.panel_components.split(","):
+                code = code.strip()
+                component = db.query(Test).filter(Test.code == code).first()
+                if component and component.id not in added_test_ids:
+                    db.add(OrderItem(order_id=order.id, test_id=component.id))
+                    added_test_ids.add(component.id)
+        else:
+            if test.id not in added_test_ids:
+                db.add(OrderItem(order_id=order.id, test_id=test.id))
+                added_test_ids.add(test.id)
+                total += test.price or 0.0
 
     order.total_price = total
     db.commit()

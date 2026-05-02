@@ -6,8 +6,11 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .database import engine, Base
 from .routers import auth, dashboard, patients, orders, results, equipment, catalog, statistics, admin, imports
+from .panels import migrate_columns, setup_panels
 
 Base.metadata.create_all(bind=engine)
+migrate_columns()
+setup_panels()
 
 app = FastAPI(title="LabCore LIS", version="1.0.0")
 

@@ -154,6 +154,8 @@ class Test(Base):
     requires_fasting = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     observations = Column(Text)
+    is_panel = Column(Boolean, default=False)
+    panel_components = Column(Text)  # comma-separated test codes
 
     category = relationship("TestCategory", back_populates="tests")
     order_items = relationship("OrderItem", back_populates="test")
